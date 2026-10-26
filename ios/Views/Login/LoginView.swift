@@ -9,7 +9,7 @@ public struct LoginView: View {
     @EnvironmentObject var store: BarberStore
 
     @State private var usePinMode: Bool = true
-    @State private var identifierInput: String = BarberStore.primaryIdentifier
+    @State private var identifierInput: String = BarberStore.defaultIdentifier
     @State private var passwordInput: String = ""
     @State private var isPasswordVisible: Bool = false
     @State private var pinBuffer: String = ""

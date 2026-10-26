@@ -1,0 +1,155 @@
+# ==============================================================================
+# CodeMagic CI/CD Configuration - Barbearia Gomes (BarberPro)
+# Multiplatform Mobile Builds: Native iOS (SwiftUI) & Native Android (Kotlin)
+# ==============================================================================
+
+workflows:
+  # ----------------------------------------------------------------------------
+  # 1. Native iOS Workflow (SwiftUI Application)
+  # ----------------------------------------------------------------------------
+  ios-release:
+    name: BarberPro iOS Native Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      xcode: latest
+      cocoapods: default
+      vars:
+        XCODE_PROJECT: "ios/BarberPro.xcodeproj"
+        XCODE_SCHEME: "BarberPro"
+        BUNDLE_ID: "com.barbeariagomea.barberpro"
+      # To enable automatic Apple distribution via App Store Connect:
+      # Add an environment group 'apple_credentials' in CodeMagic UI with:
+      # APP_STORE_CONNECT_KEY_IDENTIFIER, APP_STORE_CONNECT_ISSUER_ID, APP_STORE_CONNECT_PRIVATE_KEY
+      # groups:
+      #   - apple_credentials
+    triggering:
+      events:
+        - push
+        - tag
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+    scripts:
+      - name: Validate project layout & Swift source files
+        script: |
+          echo "Inspecting iOS Project..."
+          ls -la ios/
+          ls -la ios/BarberPro.xcodeproj/
+          test -f "$XCODE_PROJECT/project.pbxproj"
+          test -f "ios/Info.plist"
+          test -d "ios/Assets.xcassets"
+          echo "iOS project validation successful."
+
+      - name: Set dynamic build version
+        script: |
+          BUILD_NUM=${BUILD_NUMBER:-1}
+          echo "Configuring build number: $BUILD_NUM"
+          cd ios
+          # Update CFBundleVersion
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUM" Info.plist || true
+
+      - name: Compile and Package iOS Application
+        script: |
+          set -e
+          set -o pipefail
+
+          OUTPUT_DIR="$CM_BUILD_DIR/build/ios"
+          IPA_DIR="$OUTPUT_DIR/ipa"
+          mkdir -p "$IPA_DIR"
+
+          echo "Starting xcodebuild for Scheme '$XCODE_SCHEME'..."
+
+          # Check if Apple signing credentials exist in the environment
+          if [ -n "$APP_STORE_CONNECT_PRIVATE_KEY" ] || [ -n "$CM_CERTIFICATE_URL" ]; then
+            echo "Apple Developer Credentials detected. Generating signed distribution archive..."
+            
+            # Fetch signing files and setup keychain via CodeMagic CLI
+            app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create || true
+            keychain add-certificates || true
+            xcode-project use-profiles || true
+
+            xcodebuild \
+              -project "$XCODE_PROJECT" \
+              -scheme "$XCODE_SCHEME" \
+              -configuration Release \
+              -destination "generic/platform=iOS" \
+              -archivePath "$OUTPUT_DIR/BarberPro.xcarchive" \
+              archive | tee "$OUTPUT_DIR/xcodebuild.log"
+
+            xcodebuild -exportArchive \
+              -archivePath "$OUTPUT_DIR/BarberPro.xcarchive" \
+              -exportPath "$IPA_DIR" \
+              -exportOptionsPlist "ios/ExportOptions.plist" | tee -a "$OUTPUT_DIR/xcodebuild.log"
+          else
+            echo "Building archive without active distribution signing (CI artifact mode)..."
+            
+            xcodebuild \
+              -project "$XCODE_PROJECT" \
+              -scheme "$XCODE_SCHEME" \
+              -configuration Release \
+              -destination "generic/platform=iOS" \
+              -archivePath "$OUTPUT_DIR/BarberPro.xcarchive" \
+              CODE_SIGNING_ALLOWED="NO" \
+              CODE_SIGNING_REQUIRED="NO" \
+              CODE_SIGN_IDENTITY="" \
+              archive | tee "$OUTPUT_DIR/xcodebuild.log"
+
+            # Package .app bundle into an installable/inspectable .ipa artifact
+            echo "Packaging application into IPA..."
+            APP_PATH=$(find "$OUTPUT_DIR/BarberPro.xcarchive/Products/Applications" -name "*.app" -maxdepth 1 | head -n 1)
+            if [ -d "$APP_PATH" ]; then
+              mkdir -p "$OUTPUT_DIR/Payload"
+              cp -R "$APP_PATH" "$OUTPUT_DIR/Payload/"
+              cd "$OUTPUT_DIR"
+              zip -qr "$IPA_DIR/BarberPro.ipa" Payload
+              echo "IPA generated successfully: $IPA_DIR/BarberPro.ipa"
+            else
+              echo "Warning: .app not found in expected archive path."
+            fi
+          fi
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - build/ios/*.xcarchive
+      - build/ios/xcodebuild.log
+
+    publishing:
+      email:
+        recipients:
+          - simaohernani13@gmail.com
+        notify:
+          success: true
+          failure: true
+
+  # ----------------------------------------------------------------------------
+  # 2. Android Workflow (Kotlin / Jetpack Compose)
+  # ----------------------------------------------------------------------------
+  android-release:
+    name: BarberPro Android Native Build
+    max_build_duration: 30
+    instance_type: mac_mini_m2
+    environment:
+      java: 17
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+    scripts:
+      - name: Build Android Release APK
+        script: |
+          chmod +x gradlew || true
+          ./gradlew assembleDebug || gradle assembleDebug
+    artifacts:
+      - app/build/outputs/apk/**/*.apk
+    publishing:
+      email:
+        recipients:
+          - simaohernani13@gmail.com
+        notify:
+          success: true
+          failure: true

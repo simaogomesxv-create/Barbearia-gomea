@@ -63,9 +63,9 @@ public struct SettingsView: View {
                         .foregroundColor(BarberTheme.textMuted)
 
                     VStack(spacing: 10) {
-                        infoRow(label: "Identificador Oficial", value: BarberStore.primaryIdentifier, icon: "person.text.rectangle")
+                        infoRow(label: "Identificador Oficial", value: store.configuredIdentifier, icon: "person.text.rectangle")
                         Divider().background(BarberTheme.borderDark)
-                        infoRow(label: "PIN Rápido Ativo", value: "•••• (2526)", icon: "key.fill")
+                        infoRow(label: "PIN Rápido Ativo", value: "•••• (\(store.configuredPin))", icon: "key.fill")
                         Divider().background(BarberTheme.borderDark)
                         infoRow(label: "Senha do Gerente", value: "•••••••• (Gomesbarber)", icon: "lock.shield.fill")
                         Divider().background(BarberTheme.borderDark)

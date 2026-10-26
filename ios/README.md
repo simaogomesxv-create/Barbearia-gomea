@@ -1,64 +1,87 @@
 # BarberPro iOS - Barbearia Gomes • Taffinha Barber
 
-Esta pasta contém o projeto e código-fonte completo e nativo em **SwiftUI / iOS** do aplicativo **BarberPro (Barbearia Gomes)**, permitindo compilar e instalar diretamente no iPhone via Xcode em um computador Mac.
+Projeto e código-fonte nativo em **SwiftUI / iOS** pronto para compilação local no Xcode e automação CI/CD na nuvem via **CodeMagic**.
 
 ---
 
-## 📱 Credenciais Oficiais Configuradas
+## 📱 Especificações Técnicas
+
+- **Nome do Projeto Xcode:** `BarberPro.xcodeproj`
+- **Scheme:** `BarberPro`
+- **Bundle Identifier:** `com.barbeariagomea.barberpro`
+- **Deployment Target:** iOS 16.0+ (compatível com iPhone e iPad)
+- **Linguagem / Framework:** Swift 5.0 + SwiftUI
+- **Catálogo de Ativos:** `ios/Assets.xcassets` com ícone de 1024x1024 e logo oficial
+
+---
+
+## 🔐 Credenciais Oficiais Configuradas
 
 - **Identificador / Telefone:** `+244 948 840 379`
 - **Senha do Gerente:** `Gomesbarber`
 - **PIN Rápido (4 dígitos):** `2526`
-- **Criação de novas contas:** Desativada (Acesso pessoal exclusivo da Barbearia Gomes)
+- **Criação de novas contas:** Desativada (acesso pessoal e restrito).
+- **Persistência de Dados:** Salva automaticamente em `UserDefaults` (clientes, vendas, faturamento e perfil persistem entre reinicializações).
 
 ---
 
-## 📂 Estrutura dos Arquivos Criados
+## 📂 Estrutura do Projeto iOS
 
 ```text
 ios/
+├── BarberPro.xcodeproj/
+│   ├── project.pbxproj         # Configuração nativa de compilação e alvos do Xcode
+│   └── xcshareddata/xcschemes/
+│       └── BarberPro.xcscheme  # Scheme compartilhado para xcodebuild e CodeMagic
+├── Info.plist                  # Configuração do app, permissões e orientações
+├── ExportOptions.plist         # Configuração de exportação de IPA para App Store
 ├── BarberProApp.swift          # Ponto de entrada do aplicativo (@main)
-├── Assets/
-│   └── app_logo.png           # Logo oficial da Barbearia Gomes em alta resolução
+├── Assets.xcassets/            # Catálogo oficial de ícones e cores
+│   ├── AppIcon.appiconset/     # Ícone 1024x1024 oficial da Barbearia Gomes
+│   ├── app_logo.imageset/      # Variações 1x, 2x, 3x do emblema
+│   └── AccentColor.colorset/   # Dourado oficial (#E5A93C)
 ├── Models/
-│   └── BarberModels.swift     # Modelos (Client, ServiceItem, BusinessMetrics, SaleRecord)
+│   └── BarberModels.swift      # Modelos (Client, ServiceItem, BusinessMetrics, SaleRecord)
 ├── Theme/
-│   └── BarberTheme.swift      # Tema escuro e dourado (#E5A93C), fontes e formatadores (Kz)
+│   └── BarberTheme.swift       # Paleta preta e dourada, cartões e formatador Kz
 ├── Store/
-│   └── BarberStore.swift      # Gerenciamento de estado, autenticação e dados
+│   └── BarberStore.swift       # Gerenciamento de estado, autenticação e persistência JSON
 └── Views/
-    ├── MainTabView.swift      # Navegação principal com barra flutuante dourada
+    ├── MainTabView.swift       # Navegação com barra flutuante dourada
     ├── Login/
-    │   └── LoginView.swift    # Tela de acesso (PIN 4 dígitos + Senha)
+    │   └── LoginView.swift     # Autenticação com teclado numérico PIN e senha
     ├── Dashboard/
-    │   └── DashboardView.swift# Painel com faturamento, métricas, serviços e histórico
+    │   └── DashboardView.swift # Faturamento diário, métricas e últimos atendimentos
     ├── Clients/
-    │   └── ClientsView.swift  # Lista de clientes com busca e atalhos rápidos WhatsApp/Ligação
+    │   └── ClientsView.swift   # Catálogo de clientes, busca e discagem/WhatsApp
     ├── Sales/
-    │   └── NewSaleView.swift  # Checkout rápido de atendimento e formas de pagamento
+    │   └── NewSaleView.swift   # Registro de novo corte/atendimento e pagamentos
     ├── Reports/
-    │   └── ReportsView.swift  # Gráficos de vendas e análise comparativa
+    │   └── ReportsView.swift   # Gráficos de vendas e análise comparativa
     └── Settings/
-        └── SettingsView.swift # Perfil do gerente, configurações e bloqueio
+        └── SettingsView.swift  # Perfil do gerente, configurações e bloqueio
 ```
 
 ---
 
-## 🚀 Como Abrir e Rodar no iPhone (via Xcode no Mac)
+## ☁️ Como Rodar a Compilação no CodeMagic
 
-1. **Baixe o projeto:**
-   - Faça o download do arquivo ZIP do projeto ou clone pelo GitHub no seu Mac.
+1. **Acesse o CodeMagic:**
+   - Faça login em [codemagic.io](https://codemagic.io) com a sua conta GitHub.
+2. **Adicione a Aplicação:**
+   - Selecione o repositório `Barbearia-gomea` da sua conta GitHub.
+3. **Selecione o arquivo de configuração:**
+   - O CodeMagic detectará automaticamente o arquivo `codemagic.yaml` presente na raiz do repositório.
+4. **Executar a Build:**
+   - Selecione o workflow **BarberPro iOS Native Build** (`ios-release`).
+   - Clique em **Start new build**.
+   - O CodeMagic iniciará uma máquina virtual Mac (macOS com Xcode) que irá compilar o projeto `ios/BarberPro.xcodeproj`, executar o scheme `BarberPro` e empacotar o arquivo `.ipa` para download nos artefatos.
 
-2. **Abra o Xcode:**
-   - Clique em **File > New > Project...**
-   - Escolha **iOS > App** e clique em **Next**.
-   - Defina o nome como `BarberPro`, Interface como **SwiftUI**, Linguagem como **Swift**.
+---
 
-3. **Copie os arquivos:**
-   - Arraste a pasta `ios/` (ou os arquivos `.swift`) para dentro do seu projeto no Xcode.
-   - Arraste a imagem `ios/Assets/app_logo.png` para dentro do catálogo `Assets.xcassets` com o nome `app_logo`.
+## 🍎 Assinatura para Publicação na App Store (Opcional)
 
-4. **Conecte o iPhone:**
-   - Conecte o seu iPhone no Mac via cabo USB ou Wi-Fi.
-   - Em **Signing & Capabilities**, selecione sua conta Apple (gratuita ou Apple Developer).
-   - Clique no botão **Play (Run)** no topo do Xcode. O aplicativo será instalado e abrirá no seu iPhone!
+Para gerar uma versão assinada para envio direto à App Store:
+1. No painel do CodeMagic, vá em **Team settings > Apple Developer Portal**.
+2. Adicione sua chave da API do App Store Connect (`Key ID`, `Issuer ID` e chave privada `.p8`).
+3. O workflow `codemagic.yaml` detectará automaticamente as chaves e fará a assinatura e exportação do `.ipa` com perfil de distribuição da Apple.

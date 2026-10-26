@@ -25,16 +25,15 @@ public enum BarberTheme {
     public static let negativeRed = Color(red: 239/255, green: 68/255, blue: 68/255)
 
     // Formatters
-    public static func formatKz(_ value: Int64) -> String {
-        let formatter = NumberFormat()
-        return "\(formatter.string(from: NSNumber(value: value)) ?? "\(value)") Kz"
-    }
-
-    private static let NumberFormat: () -> NumberFormatter = {
+    private static let kzFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.groupingSeparator = "."
         return formatter
+    }()
+
+    public static func formatKz(_ value: Int64) -> String {
+        return "\(kzFormatter.string(from: NSNumber(value: value)) ?? "\(value)") Kz"
     }
 }
 
